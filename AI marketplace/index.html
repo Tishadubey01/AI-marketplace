@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Tools</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <h1>AI Tools</h1>
+  
+  <form id="promptForm">
+    <label for="prompt">Enter a prompt:</label>
+    <input type="text" id="prompt" name="prompt">
+    <button type="submit">Submit</button>
+  </form>
+  
+  <div id="result"></div>
+  
+  <script>
+    $(document).ready(function() {
+      $("#promptForm").submit(function(event) {
+        event.preventDefault();
+        var prompt = $("#prompt").val();
+        
+        $.ajax({
+          url: "/complete",
+          method: "POST",
+          data: { prompt: prompt },
+          success: function(response) {
+            var completions = response.completions[0];
+            var tools = completions.split("\n\n");
+            
+            var html = "";
+            for (var i = 0; i < tools.length; i++) {
+              html += "<p>" + tools[i] + "</p>";
+            }
+            
+            $("#result").html(html);
+          },
+          error: function() {
+            $("#result").html("<p>An error occurred</p>");
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
