@@ -10,6 +10,13 @@ const aiToolSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isPaid: {
+    type: Boolean,
+    default: false,
+  },
+  toolWebsite: {
+    type: String,
+  },
   ratings: [
     {
       user: {
