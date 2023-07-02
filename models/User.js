@@ -10,6 +10,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isSubscribed: {
+    type: Boolean,
+    default: false, // Set the default value to false if not provided
+  },
 });
 
 module.exports = mongoose.model('User', userSchema);
