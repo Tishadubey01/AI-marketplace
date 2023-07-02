@@ -176,10 +176,7 @@ app.post('/api/payment/create', authenticateUser, async (req, res) => {
 });
 app.post('/api/ai-tools', authenticateUser, async (req, res) => {
   try {
-    // const isSubscribed = req.user.isSubscribed;
-    // if (!isSubscribed) {
-    //   return res.status(403).json({ msg: 'Be a subscription member to access this tool' });
-    // }
+  
 
     const { name, description,isPaid,toolWebsite } = req.body;
     const user = await User.findById(req.user.id);
