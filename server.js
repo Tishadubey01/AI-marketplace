@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { check, validationResult } = require('express-validator');
 const config = require('./config');
 const app = express();
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
@@ -35,8 +36,9 @@ const authenticateUser = async (req, res, next) => {
   try {
     const token = req.header('Authorization').replace('Bearer ', '');
     const decoded = jwt.verify(token, config.jwtSecret);
-    const user = await User.findById(decoded.user.id);
-
+    const userId = decoded.user.id;
+    //const user = await User.findById(decoded.user.id);
+    const user = await User.findById(userId);
     if (!user) {
       throw new Error();
     }
@@ -75,6 +77,7 @@ app.post(
       user = new User({
         username,
         password: hashedPassword,
+        isSubscribed: false,
       });
 
       await user.save();
@@ -147,14 +150,47 @@ app.post(
     }
   }
 );
+app.post('/api/payment/create', authenticateUser, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const userId = req.user.id;
 
+    // Check if the user is logged in
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+     
+
+    if (amount>=250) {
+      // Update the user's subscription status
+      await User.findByIdAndUpdate(userId, { isSubscribed: true });
+      res.json({ message: 'Payment successful. User is subscribed.' });
+    } else {
+      res.json({ message: 'Amount should be atleast 250INR fir the subscription.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
 app.post('/api/ai-tools', authenticateUser, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    // const isSubscribed = req.user.isSubscribed;
+    // if (!isSubscribed) {
+    //   return res.status(403).json({ msg: 'Be a subscription member to access this tool' });
+    // }
 
+    const { name, description,isPaid,toolWebsite } = req.body;
+    const user = await User.findById(req.user.id);
+    if(!user.isSubscribed){
+      return res.status(403).json({ msg: 'Be a subscription member to access this tool' });
+    }
     const newAITool = new AITool({
       name,
       description,
+      isPaid,
+      toolWebsite,
       ratings: [],
       reviews: [],
     });
@@ -167,7 +203,6 @@ app.post('/api/ai-tools', authenticateUser, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
-
 // AI Tool routes
 app.get('/api/ai-tools', authenticateUser, async (req, res) => {
   try {
@@ -186,6 +221,7 @@ app.get('/api/ai-tools', authenticateUser, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
 
 // Fuzzy search
 app.get('/api/ai-tools/search', authenticateUser, async (req, res) => {
@@ -253,7 +289,11 @@ app.post('/api/ai-tools/:id/reviews', authenticateUser, async (req, res) => {
       if (existingReview) {
         return res.status(400).json({ msg: 'You have already reviewed this AI tool' });
       }
-  
+  // Check subscription status
+  const isSubscribed = req.user.isSubscribed;
+  if (tool.isPaid && !isSubscribed) {
+    return res.status(403).json({ msg: 'Be a subscription member to access this tool' });
+  }
       // Add the new review to the tool's reviews array
       tool.reviews.push({ user: userId, review });
   
@@ -266,7 +306,9 @@ app.post('/api/ai-tools/:id/reviews', authenticateUser, async (req, res) => {
       res.status(500).send('Server Error');
     }
   });
-  
+
+
+
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
