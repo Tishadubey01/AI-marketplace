@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Marketplace</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="public/styles.css">
+</head>
+<body>
+  <div class="main">
+
+		<div class="overlay"></div>
+		<div class="navbar">
+			<div class="logo">AI MARKETPLACE</div>
+			<ul>
+				<li><a href="#">ABOUT US</a></li>
+				<li><a href="#">CONTACT US</a></li>
+        
+			</ul>
+		</div>
+		<div class="heading">
+				<h1 class="head">WELCOME TO OUR <span>WEBSITE</span></h1>
+				<h3 class="sub">SEARCH AI TOOLS REQUIRED FOR</h3>	
+				
+        <form id="promptForm">
+          <input type="text" id="prompt" name="prompt" style="font-size: 1.5em;">
+            <button type="submit">Submit</button>
+        </form> 
+		</div>
+	</div>	
+  
+  <div id="result" style="font-size: 1em; color: #ffffff;">
+    
+  
+    <script>
+      $(document).ready(function() {
+        $("#promptForm").submit(function(event) {
+          event.preventDefault();
+          var prompt = $("#prompt").val();
+          
+          $.ajax({
+            url: "/complete",
+            method: "POST",
+            data: { prompt: prompt },
+            success: function(response) {
+              var completions = response.completions[0];
+              var tools = completions.split("\n\n");
+              
+              var html = "<h1><span>TOP 5 AI TOOLS RELATED TO THE SEARCHED TOPIC ARE</span></h1> ";
+              for (var i = 0; i < tools.length; i++) {
+                html += "<p>" + tools[i] + "</p>";
+              }
+              
+              $("#result").html(html);
+            },
+            error: function() {
+              $("#result").html("<p>An error occurred</p>");
+            }
+          });
+        });
+      });
+    </script>
+  </div>
+</body>
+</html>
